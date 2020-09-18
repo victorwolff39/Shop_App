@@ -13,9 +13,11 @@ class ProductItem extends StatelessWidget {
     * we would STILL receive the all the products information (including non final attributes
     * like "isFavorite") AND be able to use methods (like toggleFavorite),
     * but would not "notice" if any information gets updated.
+    * 
+    * Using a Consumer in order to update the icon... See comment bellow 
     *
     */
-    final Product product = Provider.of<Product>(context); //...(context, listen: false)
+    final Product product = Provider.of<Product>(context, listen: false);
     return ClipRRect(
       borderRadius: BorderRadius.circular(10),
       child: GridTile(
@@ -34,9 +36,19 @@ class ProductItem extends StatelessWidget {
           footer: GridTileBar(
             backgroundColor: Colors.black87,
             leading: IconButton(
-              icon: Icon(
-                product.isFavorite ? Icons.favorite : Icons.favorite_border,
-                color: Theme.of(context).accentColor,
+              /*
+              *
+              * Using a Consumer to Wrap the Icon in the IconButton.
+              * The Provider is configured to not listen to updates (listen: false).
+              * For that reason, we are not getting notified when values change, so we use a
+              * Consumer to wrap only the objects that we need to update values for optimization.
+              *
+               */
+              icon: Consumer<Product>(
+                builder: (ctx, product, _) => Icon(
+                  product.isFavorite ? Icons.favorite : Icons.favorite_border,
+                  color: Theme.of(context).accentColor,
+                ),
               ),
               onPressed: product.toggleFavorite,
             ),
