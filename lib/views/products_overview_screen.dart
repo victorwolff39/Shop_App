@@ -28,6 +28,26 @@ class _ProductOverviewScreenState extends State<ProductOverviewScreen> {
           title: Text('My Shop'),
           centerTitle: true,
           actions: [
+            Consumer<Cart>(
+              /*
+               * In this case I make use of the 3rd parameter in the Consumer.
+               * I don't need to rebuild the whole IconButton, so I put it in the child (upper one)
+               * of the Consumer, and in the builder's child I put the badge, that is what will
+               * effectively be changing according to the value received from the Cart provider.
+               */
+              child: IconButton(
+                icon: Icon(
+                  Icons.shopping_cart,
+                  color: Colors.white,
+                ),
+                onPressed: () => Navigator.of(context).pushNamed(AppRoutes.CART),
+              ),
+              builder: (ctx, cart, child) =>
+                  Badge(
+                    value: cart.itemsCount.toString(),
+                    child: child,
+                  ),
+            ),
             PopupMenuButton(
               onSelected: (FilterOptions selectedValue) {
                 setState(() {
@@ -50,26 +70,6 @@ class _ProductOverviewScreenState extends State<ProductOverviewScreen> {
                   value: FilterOptions.Favorite,
                 ),
               ],
-            ),
-            Consumer<Cart>(
-              /*
-               * In this case I make use of the 3rd parameter in the Consumer.
-               * I don't need to rebuild the whole IconButton, so I put it in the child (upper one)
-               * of the Consumer, and in the builder's child I put the badge, that is what will
-               * effectively be changing according to the value received from the Cart provider.
-               */
-              child: IconButton(
-                icon: Icon(
-                  Icons.shopping_cart,
-                  color: Colors.white,
-                ),
-                onPressed: () => Navigator.of(context).pushNamed(AppRoutes.CART),
-              ),
-              builder: (ctx, cart, child) =>
-                  Badge(
-                    value: cart.itemsCount.toString(),
-                    child: child,
-                  ),
             ),
           ],
         ),

@@ -3,7 +3,7 @@ import 'package:shop_app/providers/product.dart';
 
 class CartItem {
   final Product product;
-  final int quantity;
+  int quantity;
   final double price;
 
   CartItem({
@@ -63,6 +63,19 @@ class Cart with ChangeNotifier {
   void removeItem(String productId) {
     _items.remove(productId);
     notifyListeners();
+  }
+
+  void removeSingleItem(Product product) {
+    if(!_items.containsKey(product.id)) {
+      return;
+    } else {
+      if(_items[product.id].quantity > 1) {
+        _items[product.id].quantity = _items[product.id].quantity - 1;
+      } else {
+        removeItem(product.id);
+      }
+      notifyListeners();
+    }
   }
 
   void clear() {

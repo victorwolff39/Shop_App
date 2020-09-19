@@ -67,7 +67,25 @@ class ProductItem extends StatelessWidget {
               ),
               onPressed: () {
                 cart.addItem(product);
-                print(cart.itemsCount);
+                /*
+                 * Note that this widget does not have a Scaffold, but Flutter will
+                 * go up the hierarchy to find the proper Scaffold (in this case it is on
+                 * ProductsOverviewScreen
+                 */
+                Scaffold.of(context)
+                    .hideCurrentSnackBar(); //Remove SnackBar that is currently on the screen.
+                Scaffold.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Product successfully added to the cart.'),
+                    duration: Duration(seconds: 2),
+                    action: SnackBarAction(
+                      label: 'UNDO',
+                      onPressed: () {
+                        cart.removeSingleItem(product);
+                      },
+                    ),
+                  ),
+                );
               },
             ),
           )),
