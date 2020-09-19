@@ -1,6 +1,9 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shop_app/providers/cart.dart';
 import 'package:shop_app/providers/products_provider.dart';
+import 'package:shop_app/widgets/badge.dart';
 import 'package:shop_app/widgets/products_grid.dart';
 
 enum FilterOptions {
@@ -23,6 +26,26 @@ class _ProductOverviewScreenState extends State<ProductOverviewScreen> {
           title: Text('My Shop'),
           centerTitle: true,
           actions: [
+            Consumer<Cart>(
+              /*
+               * In this case I make use of the 3rd parameter in the Consumer.
+               * I don't need to rebuild the whole IconButton, so I put it in the child (upper one)
+               * of the Consumer, and in the builder's child I put the badge, that is what will
+               * effectively be changing according to the value received from the Cart provider.
+               */
+              child: IconButton(
+                icon: Icon(
+                  Icons.shopping_cart,
+                  color: Colors.white,
+                ),
+                onPressed: null,
+              ),
+              builder: (ctx, cart, child) =>
+                  Badge(
+                      value: cart.itemCount.toString(),
+                      child: child,
+                  ),
+            ),
             PopupMenuButton(
               onSelected: (FilterOptions selectedValue) {
                 setState(() {
@@ -34,7 +57,8 @@ class _ProductOverviewScreenState extends State<ProductOverviewScreen> {
                 });
               },
               icon: Icon(Icons.filter_list),
-              itemBuilder: (_) => [
+              itemBuilder: (_) =>
+              [
                 PopupMenuItem(
                   child: Text('All'),
                   value: FilterOptions.All,
@@ -51,7 +75,7 @@ class _ProductOverviewScreenState extends State<ProductOverviewScreen> {
           builder: (ctx, product, _) => ProductsGrid(_showFavoriteOnly),
         )
 
-        //ProductsGrid(_showFavoriteOnly),
-        );
+      //ProductsGrid(_showFavoriteOnly),
+    );
   }
 }
