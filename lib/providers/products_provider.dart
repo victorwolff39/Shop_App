@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:shop_app/data/dummy_data.dart';
-import 'file:///E:/%23STORAGE/PROJECTS/curso_flutter/shop_app/lib/providers/product.dart';
+import 'package:shop_app/providers/product.dart';
 
 class ProductsProvider with ChangeNotifier {
   /*
