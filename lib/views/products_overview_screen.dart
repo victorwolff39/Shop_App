@@ -36,11 +36,11 @@ class _ProductOverviewScreenState extends State<ProductOverviewScreen> {
               icon: Icon(Icons.filter_list),
               itemBuilder: (_) => [
                 PopupMenuItem(
-                  child: Text('Todos'),
+                  child: Text('All'),
                   value: FilterOptions.All,
                 ),
                 PopupMenuItem(
-                  child: Text('Favoritos'),
+                  child: Text('Favorites'),
                   value: FilterOptions.Favorite,
                 ),
               ],

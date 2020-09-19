@@ -42,7 +42,7 @@ class ProductsGrid extends StatelessWidget {
             ),
           )
         : Center(
-            child: Text('Nenhum produto encontrado.'),
+            child: Text('No product found.'),
           );
   }
 }
