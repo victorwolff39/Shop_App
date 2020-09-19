@@ -9,6 +9,7 @@ class CartItemWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
     return Dismissible(
       /*
        * Dismissible properties:
@@ -30,7 +31,38 @@ class CartItemWidget extends StatelessWidget {
         padding: EdgeInsets.only(right: 30),
       ),
       onDismissed: (_) {
-        Provider.of<Cart>(context, listen: false).removeItem(cartItem.product.id);
+        Provider.of<Cart>(context, listen: false)
+            .removeItem(cartItem.product.id);
+      },
+      confirmDismiss: (_) {
+        return showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: Text('Remove Item'),
+            content: SingleChildScrollView(
+              child: ListBody(
+                children: [
+                  Text('This action cannot be undone.'),
+                  Text('Do you want to remove this item from the cart?'),
+                ],
+              ),
+            ),
+            actions: [
+              FlatButton(
+                child: Text('No'),
+                onPressed: () {
+                  Navigator.of(ctx).pop(false);
+                },
+              ),
+              FlatButton(
+                child: Text('Yes'),
+                onPressed: () {
+                  Navigator.of(context).pop(true);
+                },
+              ),
+            ],
+          ),
+        );
       },
       /*
        * End of dismissible properties...
@@ -52,7 +84,8 @@ class CartItemWidget extends StatelessWidget {
               ),
             ),
             title: Text(cartItem.product.title),
-            subtitle: Text('Total: R\$ ${(cartItem.price * cartItem.quantity).toStringAsFixed(2)}'),
+            subtitle: Text(
+                'Total: R\$ ${(cartItem.price * cartItem.quantity).toStringAsFixed(2)}'),
             trailing: Text('${cartItem.quantity}x'),
           ),
         ),
