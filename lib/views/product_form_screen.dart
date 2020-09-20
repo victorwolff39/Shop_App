@@ -1,7 +1,7 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:shop_app/providers/product.dart';
+import 'package:shop_app/providers/products_provider.dart';
 
 class ProductFormScreen extends StatefulWidget {
   @override
@@ -53,6 +53,26 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
     _imageUrlFocusMode.addListener(_updateImage);
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_formData.isEmpty) {
+      final product = ModalRoute.of(context).settings.arguments as Product;
+
+      if (product != null) {
+        _formData['id'] = product.id;
+        _formData['title'] = product.title;
+        _formData['description'] = product.description;
+        _formData['price'] = product.price;
+        _formData['imageUrl'] = product.imageUrl;
+
+        _imageUrlController.text = _formData['imageUrl'];
+      } else {
+        _formData['price'] = '';
+      }
+    }
+  }
+
   void _updateImage() {
     if (isValidUrl(_imageUrlController.text)) {
       setState(() {});
@@ -64,20 +84,28 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
     super.dispose();
     _priceFocusNode.dispose();
     _descriptionFocusNode.dispose();
-    _imageUrlFocusMode.dispose();
     _imageUrlFocusMode.removeListener(_updateImage);
+    _imageUrlFocusMode.dispose();
   }
 
   void _submitForm() {
     if (_form.currentState.validate()) {
       _form.currentState.save();
-      final newProduct = Product(
-        id: Random().nextDouble().toString(),
+      final product = Product(
+        id: _formData['id'],
         title: _formData['title'],
         price: _formData['price'],
         description: _formData['description'],
         imageUrl: _formData['imageUrl'],
       );
+      final productProvider =
+          Provider.of<ProductsProvider>(context, listen: false);
+      if (_formData['id'] == null) {
+        productProvider.addProduct(product);
+      } else {
+        productProvider.updateProduct(product);
+      }
+      Navigator.of(context).pop();
     } else {
       return;
     }
@@ -116,6 +144,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
             children: [
               TextFormField(
                 decoration: InputDecoration(labelText: 'Title'),
+                initialValue: _formData['title'],
                 textInputAction: TextInputAction.next,
                 onFieldSubmitted: (_) {
                   FocusScope.of(context).requestFocus(_priceFocusNode);
@@ -133,6 +162,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
               ),
               TextFormField(
                 decoration: InputDecoration(labelText: 'Price'),
+                initialValue: _formData['price'].toString(),
                 textInputAction: TextInputAction.next,
                 keyboardType: TextInputType.numberWithOptions(decimal: true),
                 //Keyboard type, for iOS devices a "numberWithOptions(decimal: true)" option should be set.
@@ -153,6 +183,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
               ),
               TextFormField(
                 decoration: InputDecoration(labelText: 'Description'),
+                initialValue: _formData['description'],
                 maxLines: 3,
                 //Number of lines
                 keyboardType: TextInputType.multiline,
@@ -162,8 +193,8 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                   if (value.trim().isEmpty) {
                     return 'Description should not be empty';
                   }
-                  if (value.trim().length > 10) {
-                    return 'Description should have at least 120 characters.';
+                  if (value.trim().length < 10) {
+                    return 'Description should have at least 12 characters.';
                   }
                   return null;
                 },
