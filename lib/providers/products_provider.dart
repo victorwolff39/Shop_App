@@ -1,19 +1,14 @@
 import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart';
-import 'package:shop_app/data/dummy_data.dart';
 import 'package:shop_app/data/endpoints.dart';
 import 'package:shop_app/models/error.dart';
 import 'package:shop_app/providers/product.dart';
 
 class ProductsProvider with ChangeNotifier {
-  /*
-  * To test the Provider functionality, remove DUMMY_PRODUCTS from here
-  * and note that there is no more products in the ProductsOverview page.
-  *
-  * List<Product> _items = [];
-   */
-  List<Product> _items = DUMMY_PRODUCTS;
+   final String _productsUrl = Endpoints.PRODUCTS;
+
+  List<Product> _items = [];
 
   List<Product> get items => [..._items];
 
@@ -21,11 +16,30 @@ class ProductsProvider with ChangeNotifier {
     return _items.where((element) => element.isFavorite).toList();
   }
 
+  Future<void> loadProducts() async {
+    _items.clear();
+    final response = await get(_productsUrl);
+    Map<String, dynamic> data = json.decode(response.body);
+    if(data != null) {
+      data.forEach((productId, productData) {
+        _items.add(Product(
+          id: productId,
+          title: productData['title'],
+          description: productData['description'],
+          price: productData['price'],
+          imageUrl: productData['imageUrl'],
+          isFavorite: productData['isFavorite'],
+        ));
+      });
+      notifyListeners();
+    }
+    return Future.value();
+  }
+
   Future<Error> addProduct(Product newProduct) async {
-    const productsUrl = Endpoints.PRODUCTS;
     try {
       final response = await post(
-        productsUrl,
+        _productsUrl,
         body: json.encode({
           'title': newProduct.title,
           'description': newProduct.description,

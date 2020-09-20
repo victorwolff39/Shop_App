@@ -20,62 +20,80 @@ class ProductOverviewScreen extends StatefulWidget {
 
 class _ProductOverviewScreenState extends State<ProductOverviewScreen> {
   bool _showFavoriteOnly = false;
+  bool _isLoading = true;
+
+  /*
+   * When this Widget is started it will get products from the backend.
+   */
+  @override
+  void initState() {
+    super.initState();
+    Provider.of<ProductsProvider>(context, listen: false)
+        .loadProducts()
+        .then((value) {
+      setState(() {
+        _isLoading = false;
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: Text('My Shop'),
-          centerTitle: true,
-          actions: [
-            Consumer<Cart>(
-              /*
+      appBar: AppBar(
+        title: Text('My Shop'),
+        centerTitle: true,
+        actions: [
+          Consumer<Cart>(
+            /*
                * In this case I make use of the 3rd parameter in the Consumer.
                * I don't need to rebuild the whole IconButton, so I put it in the child (upper one)
                * of the Consumer, and in the builder's child I put the badge, that is what will
                * effectively be changing according to the value received from the Cart provider.
                */
-              child: IconButton(
-                icon: Icon(
-                  Icons.shopping_cart,
-                  color: Colors.white,
-                ),
-                onPressed: () => Navigator.of(context).pushNamed(AppRoutes.CART),
+            child: IconButton(
+              icon: Icon(
+                Icons.shopping_cart,
+                color: Colors.white,
               ),
-              builder: (ctx, cart, child) =>
-                  Badge(
-                    value: cart.itemsCount.toString(),
-                    child: child,
-                  ),
+              onPressed: () => Navigator.of(context).pushNamed(AppRoutes.CART),
             ),
-            PopupMenuButton(
-              onSelected: (FilterOptions selectedValue) {
-                setState(() {
-                  if (selectedValue == FilterOptions.All) {
-                    _showFavoriteOnly = false;
-                  } else {
-                    _showFavoriteOnly = true;
-                  }
-                });
-              },
-              icon: Icon(Icons.filter_list),
-              itemBuilder: (_) =>
-              [
-                PopupMenuItem(
-                  child: Text('All'),
-                  value: FilterOptions.All,
-                ),
-                PopupMenuItem(
-                  child: Text('Favorites'),
-                  value: FilterOptions.Favorite,
-                ),
-              ],
+            builder: (ctx, cart, child) => Badge(
+              value: cart.itemsCount.toString(),
+              child: child,
             ),
-          ],
-        ),
-        body: Consumer<ProductsProvider>(
-          builder: (ctx, product, _) => ProductsGrid(_showFavoriteOnly),
-        ),
+          ),
+          PopupMenuButton(
+            onSelected: (FilterOptions selectedValue) {
+              setState(() {
+                if (selectedValue == FilterOptions.All) {
+                  _showFavoriteOnly = false;
+                } else {
+                  _showFavoriteOnly = true;
+                }
+              });
+            },
+            icon: Icon(Icons.filter_list),
+            itemBuilder: (_) => [
+              PopupMenuItem(
+                child: Text('All'),
+                value: FilterOptions.All,
+              ),
+              PopupMenuItem(
+                child: Text('Favorites'),
+                value: FilterOptions.Favorite,
+              ),
+            ],
+          ),
+        ],
+      ),
+      body: _isLoading
+          ? Center(
+              child: CircularProgressIndicator(),
+            )
+          : Consumer<ProductsProvider>(
+              builder: (ctx, product, _) => ProductsGrid(_showFavoriteOnly),
+            ),
       drawer: AppDrawer(),
       //ProductsGrid(_showFavoriteOnly),
     );

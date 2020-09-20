@@ -9,7 +9,7 @@ class ProductFormScreen extends StatefulWidget {
   _ProductFormScreenState createState() => _ProductFormScreenState();
 }
 
-/*
+  /*
    * ---------------------------------------------------------------------------
    * CONTROLLING THE FOCUS OF THE FORM:
    *
