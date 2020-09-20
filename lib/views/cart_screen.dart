@@ -51,9 +51,33 @@ class CartScreen extends StatelessWidget {
                     ),
                     textColor: Theme.of(context).primaryColor,
                     onPressed: () {
-                      Provider.of<Orders>(context, listen: false)
-                          .addOrder(cart);
-                      cart.clear();
+                      if (cart.totalAmount != 0) {
+                        Provider.of<Orders>(context, listen: false)
+                            .addOrder(cart);
+                        cart.clear();
+                      } else {
+                        return showDialog(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            title: Text('No Items in Cart'),
+                            content: SingleChildScrollView(
+                              child: ListBody(
+                                children: [
+                                  Text('Please add items to the cart to checkout an order.'),
+                                ],
+                              ),
+                            ),
+                            actions: [
+                              FlatButton(
+                                child: Text('Ok'),
+                                onPressed: () {
+                                  Navigator.of(ctx).pop();
+                                },
+                              ),
+                            ],
+                          ),
+                        );
+                      }
                     },
                   )
                 ],

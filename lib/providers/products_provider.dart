@@ -21,4 +21,8 @@ class ProductsProvider with ChangeNotifier {
     _items.add(product);
     notifyListeners();
   }
+
+  int itemsCount() {
+    return _items.length;
+  }
 }
