@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shop_app/models/error.dart';
 import 'package:shop_app/providers/product.dart';
 import 'package:shop_app/providers/products_provider.dart';
 
@@ -89,7 +90,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
     _imageUrlFocusMode.dispose();
   }
 
-  void _submitForm() {
+  Future<void> _submitForm() async {
     if (_form.currentState.validate()) {
       _form.currentState.save();
       final product = Product(
@@ -105,12 +106,46 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
       final productProvider =
           Provider.of<ProductsProvider>(context, listen: false);
       if (_formData['id'] == null) {
-        /*
-         * Now when returning a future in the "addProduct" function, we can use
-         * the .then to catch when the product was added.
-         */
-        productProvider.addProduct(product).catchError((error) {
-          return showDialog<Null>(
+        final Error error = await productProvider.addProduct(product);
+        if (error != null) {
+          await showDialog<Null>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: Text(error.title),
+              content: Text(error.description),
+              actions: [
+                FlatButton(
+                  child: Text('Ok'),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ],
+            ),
+          );
+          setState(() {
+            _isLoading = false;
+          });
+        } else {
+          setState(() {
+            _isLoading = false;
+          });
+          Navigator.of(context).pop();
+        }
+      } else {
+        productProvider.updateProduct(product);
+        setState(() {
+          _isLoading = false;
+        });
+        Navigator.of(context).pop();
+      }
+    }
+  }
+
+  /*
+        try {
+          await productProvider.addProduct(product);
+          Navigator.of(context).pop();
+        } catch(error) {
+          await showDialog<Null>(
             context: context,
             builder: (ctx) => AlertDialog(
               title: Text('Unknown Error'),
@@ -123,21 +158,12 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
               ],
             ),
           );
-        }).then((value) {
+        } finally {
           setState(() {
             _isLoading = false;
           });
-          Navigator.of(context).pop();
-        });
-      } else {
-        productProvider.updateProduct(product);
-        setState(() {
-          _isLoading = false;
-        });
-        Navigator.of(context).pop();
-      }
-    }
-  }
+        }
+        */
 
   bool isValidUrl(String url) {
     /*
