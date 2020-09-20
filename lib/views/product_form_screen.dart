@@ -46,6 +46,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
   final _form = GlobalKey<FormState>();
   final _formData = Map<String, Object>();
   final product = Product;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -98,16 +99,29 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
         description: _formData['description'],
         imageUrl: _formData['imageUrl'],
       );
+      setState(() {
+        _isLoading = true;
+      });
       final productProvider =
           Provider.of<ProductsProvider>(context, listen: false);
       if (_formData['id'] == null) {
-        productProvider.addProduct(product);
+        /*
+         * Now when returning a future in the "addProduct" function, we can use
+         * the .then to catch when the product was added.
+         */
+        productProvider.addProduct(product).then((value) {
+          setState(() {
+            _isLoading = false;
+          });
+          Navigator.of(context).pop();
+        });
       } else {
         productProvider.updateProduct(product);
+        setState(() {
+          _isLoading = false;
+        });
+        Navigator.of(context).pop();
       }
-      Navigator.of(context).pop();
-    } else {
-      return;
     }
   }
 
@@ -136,7 +150,10 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
           ),
         ],
       ),
-      body: Padding(
+      body: _isLoading ? Center(
+        child: CircularProgressIndicator(),
+      ) :
+      Padding(
         padding: const EdgeInsets.all(15),
         child: Form(
           key: _form,
@@ -235,12 +252,10 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                         border: Border.all(color: Colors.grey, width: 1)),
                     child: _imageUrlController.text.isEmpty
                         ? Text('Inform a URL')
-                        : FittedBox(
-                            child: Image.network(
-                              _imageUrlController.text,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
+                        : Image.network(
+                          _imageUrlController.text,
+                          fit: BoxFit.cover,
+                        ),
                     alignment: Alignment.center,
                   ),
                 ],

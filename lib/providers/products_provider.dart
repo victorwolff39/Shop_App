@@ -1,7 +1,8 @@
-import 'dart:math';
-
+import 'dart:convert';
 import 'package:flutter/cupertino.dart';
+import 'package:http/http.dart';
 import 'package:shop_app/data/dummy_data.dart';
+import 'package:shop_app/data/endpoints.dart';
 import 'package:shop_app/providers/product.dart';
 
 class ProductsProvider with ChangeNotifier {
@@ -19,15 +20,43 @@ class ProductsProvider with ChangeNotifier {
     return _items.where((element) => element.isFavorite).toList();
   }
 
-  void addProduct(Product newProduct) {
-    _items.add(Product(
-      id: Random().nextDouble().toString(),
-      title: newProduct.title,
-      description: newProduct.description,
-      price: newProduct.price,
-      imageUrl: newProduct.imageUrl,
-    ));
-    notifyListeners();
+  Future<void> addProduct(Product newProduct) {
+    const productsUrl = Endpoints.PRODUCTS;
+    /*
+     * To return a Future, you need to put the "return" in front so that ONLY
+     * when the code inside of "then" finishes it will return a Future that can
+     * be accessed with the Then function.
+     */
+    return post(
+      productsUrl,
+      body: json.encode({
+        'title': newProduct.title,
+        'description': newProduct.description,
+        'price': newProduct.price,
+        'imageUrl': newProduct.imageUrl,
+        'isFavorite': newProduct.isFavorite,
+      }),
+      /*
+      * The method POST returns a Future<Response>, this means that the program
+      * will not stop and wait for the HTTP response, but instead will continue
+      * running and execute something once it receives the response.
+      *
+      * I can get the response by using the .then() and receiving the "response".
+      *
+      * .then((response) {
+      * });
+      */
+    ).then((response) {
+      _items.add(Product(
+        id: json.decode(response.body)['name'],
+        //Using the returned "name"
+        title: newProduct.title,
+        description: newProduct.description,
+        price: newProduct.price,
+        imageUrl: newProduct.imageUrl,
+      ));
+      notifyListeners();
+    });
   }
 
   void updateProduct(Product product) {
