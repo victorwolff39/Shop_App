@@ -6,7 +6,7 @@ import 'package:shop_app/models/error.dart';
 import 'package:shop_app/providers/product.dart';
 
 class ProductsProvider with ChangeNotifier {
-   final String _productsUrl = Endpoints.PRODUCTS;
+  final String _productsUrl = Endpoints.PRODUCTS;
 
   List<Product> _items = [];
 
@@ -18,9 +18,9 @@ class ProductsProvider with ChangeNotifier {
 
   Future<void> loadProducts() async {
     _items.clear();
-    final response = await get(_productsUrl);
+    final response = await get('$_productsUrl.json');
     Map<String, dynamic> data = json.decode(response.body);
-    if(data != null) {
+    if (data != null) {
       data.forEach((productId, productData) {
         _items.add(Product(
           id: productId,
@@ -39,7 +39,7 @@ class ProductsProvider with ChangeNotifier {
   Future<Error> addProduct(Product newProduct) async {
     try {
       final response = await post(
-        _productsUrl,
+        '$_productsUrl.json',
         body: json.encode({
           'title': newProduct.title,
           'description': newProduct.description,
@@ -67,23 +67,58 @@ class ProductsProvider with ChangeNotifier {
     }
   }
 
-  void updateProduct(Product product) {
+  Future<Error> updateProduct(Product product) async {
     if (product == null || product.id == null) {
-      return;
+      return null;
     }
     final index = _items.indexWhere((prod) => prod.id == product.id);
     if (index >= 0) {
-      _items[index] = product;
-      notifyListeners();
+      try {
+        await patch('$_productsUrl/${product.id}.json',
+            body: json.encode({
+              'title': product.title,
+              'description': product.description,
+              'price': product.price,
+              'imageUrl': product.imageUrl,
+            }));
+        _items[index] = product;
+        notifyListeners();
+        return null;
+      } catch (error) {
+        return Error(
+          title: 'Unknown Error',
+          description: 'An unexpected error has occurred.',
+        );
+      }
+    } else {
+      return null;
     }
   }
 
-  void deleteProduct(String id) {
-    final index = _items.indexWhere((prod) => prod.id == prod.id);
+  Future<Error> deleteProduct(String id) async {
+    final index = _items.indexWhere((prod) => prod.id == id);
+    //final index = _items.indexWhere((prod) => prod.id == prod.id);
     if (index >= 0) {
-      _items.removeWhere((prod) => prod.id == id);
-      notifyListeners();
+      final product = _items[index];
+      try {
+        final response = await delete('$_productsUrl/${product.id}.json');
+        _items.remove(product);
+        notifyListeners();
+        if (response.statusCode >= 400) {
+          _items.add(product);
+          notifyListeners();
+          return Error(
+              title: 'Unknown Error',
+              description: 'An unexpected error has occurred.');
+        }
+        return null;
+      } catch (error) {
+        return Error(
+            title: 'Unknown Error',
+            description: 'An unexpected error has occurred.');
+      }
     }
+    return null;
   }
 
   int itemsCount() {

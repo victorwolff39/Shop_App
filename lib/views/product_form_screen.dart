@@ -9,7 +9,7 @@ class ProductFormScreen extends StatefulWidget {
   _ProductFormScreenState createState() => _ProductFormScreenState();
 }
 
-  /*
+/*
    * ---------------------------------------------------------------------------
    * CONTROLLING THE FOCUS OF THE FORM:
    *
@@ -75,12 +75,6 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
     }
   }
 
-  void _updateImage() {
-    if (isValidUrl(_imageUrlController.text)) {
-      setState(() {});
-    }
-  }
-
   @override
   void dispose() {
     super.dispose();
@@ -88,6 +82,28 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
     _descriptionFocusNode.dispose();
     _imageUrlFocusMode.removeListener(_updateImage);
     _imageUrlFocusMode.dispose();
+  }
+
+  void _updateImage() {
+    if (isValidUrl(_imageUrlController.text)) {
+      setState(() {});
+    }
+  }
+
+  _showErrorDialog(Error error) async {
+    await showDialog<Null>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(error.title),
+        content: Text(error.description),
+        actions: [
+          FlatButton(
+            child: Text('Ok'),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _submitForm() async {
@@ -108,19 +124,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
       if (_formData['id'] == null) {
         final Error error = await productProvider.addProduct(product);
         if (error != null) {
-          await showDialog<Null>(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              title: Text(error.title),
-              content: Text(error.description),
-              actions: [
-                FlatButton(
-                  child: Text('Ok'),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-              ],
-            ),
-          );
+          _showErrorDialog(error);
           setState(() {
             _isLoading = false;
           });
@@ -131,39 +135,21 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
           Navigator.of(context).pop();
         }
       } else {
-        productProvider.updateProduct(product);
-        setState(() {
-          _isLoading = false;
-        });
-        Navigator.of(context).pop();
-      }
-    }
-  }
-
-  /*
-        try {
-          await productProvider.addProduct(product);
-          Navigator.of(context).pop();
-        } catch(error) {
-          await showDialog<Null>(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              title: Text('Unknown Error'),
-              content: Text('An unexpected error has occurred.'),
-              actions: [
-                FlatButton(
-                  child: Text('Ok'),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-              ],
-            ),
-          );
-        } finally {
+        final Error error = await productProvider.updateProduct(product);
+        if (error != null) {
+          _showErrorDialog(error);
           setState(() {
             _isLoading = false;
           });
+        } else {
+          setState(() {
+            _isLoading = false;
+          });
+          Navigator.of(context).pop();
         }
-        */
+      }
+    }
+  }
 
   bool isValidUrl(String url) {
     /*
