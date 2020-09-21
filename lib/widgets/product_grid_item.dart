@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shop_app/models/error.dart';
 import 'package:shop_app/providers/cart.dart';
 import 'package:shop_app/providers/product.dart';
 import 'package:shop_app/utils/app_routes.dart';
@@ -54,7 +55,17 @@ class ProductGridItem extends StatelessWidget {
                   color: Theme.of(context).accentColor,
                 ),
               ),
-              onPressed: product.toggleFavorite,
+              onPressed: () async {
+                Error error = await product.toggleFavorite();
+                if(error != null) {
+                  final scaffold = Scaffold.of(context);
+                  scaffold.hideCurrentSnackBar();
+                  scaffold.showSnackBar(SnackBar(
+                    content: Text(error.description),
+                    duration: Duration(seconds: 1),
+                  ));
+                }
+              },
             ),
             title: Text(
               product.title,
@@ -72,9 +83,9 @@ class ProductGridItem extends StatelessWidget {
                  * go up the hierarchy to find the proper Scaffold (in this case it is on
                  * ProductsOverviewScreen
                  */
-                Scaffold.of(context)
-                    .hideCurrentSnackBar(); //Remove SnackBar that is currently on the screen.
-                Scaffold.of(context).showSnackBar(
+                final scaffold =  Scaffold.of(context);
+                scaffold.hideCurrentSnackBar(); //Remove SnackBar that is currently on the screen.
+                scaffold.showSnackBar(
                   SnackBar(
                     content: Text('Product successfully added to the cart.'),
                     duration: Duration(seconds: 2),
