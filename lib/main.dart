@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shop_app/providers/auth.dart';
 import 'package:shop_app/providers/cart.dart';
 import 'package:shop_app/providers/orders.dart';
 import 'package:shop_app/providers/products_provider.dart';
@@ -33,13 +34,17 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (_) => new Orders(),
         ),
+        ChangeNotifierProvider(
+          create: (_) => new Auth(),
+        ),
       ],
       child: MaterialApp(
         title: 'My Shop',
         theme: ThemeData(
-            primarySwatch: Colors.purple,
-            accentColor: Colors.deepOrange,
-            fontFamily: 'Lato'),
+          primarySwatch: Colors.purple,
+          accentColor: Colors.deepOrange,
+          fontFamily: 'Lato',
+        ),
         //home: ProductOverviewScreen(),
         routes: {
           AppRoutes.AUTH: (ctx) => AuthScreen(),
