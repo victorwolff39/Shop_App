@@ -2,8 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shop_app/providers/cart.dart';
-import 'package:shop_app/providers/orders.dart';
 import 'package:shop_app/widgets/cart_item.dart';
+import 'package:shop_app/widgets/checkout_button.dart';
 
 class CartScreen extends StatelessWidget {
   @override
@@ -45,25 +45,7 @@ class CartScreen extends StatelessWidget {
                     backgroundColor: Theme.of(context).primaryColor,
                   ),
                   Spacer(),
-                  cart.totalAmount > 0
-                      ? FlatButton(
-                          child: Text(
-                            'CHECKOUT',
-                          ),
-                          textColor: Theme.of(context).primaryColor,
-                          onPressed: () {
-                            Provider.of<Orders>(context, listen: false)
-                                .addOrder(cart);
-                            cart.clear();
-                          },
-                        )
-                      : FlatButton(
-                          child: Text(
-                            'CHECKOUT',
-                          ),
-                          textColor: Theme.of(context).primaryColor,
-                          onPressed: null,
-                        )
+                  CheckoutButton(),
                 ],
               ),
             ),
