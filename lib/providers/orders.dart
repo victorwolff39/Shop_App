@@ -2,9 +2,10 @@ import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart';
-import 'package:shop_app/data/endpoints.dart';
+import 'package:shop_app/utils/endpoints.dart';
 import 'package:shop_app/models/error.dart';
 import 'package:shop_app/providers/cart.dart';
+import 'package:shop_app/providers/product.dart';
 
 class Order {
   final String id;
@@ -31,6 +32,39 @@ class Orders with ChangeNotifier {
 
   int get itemsCount {
     return _items.length;
+  }
+
+  Future<void> loadOrders() async {
+    List<Order> loadedItems = [];
+    final response = await get('$_ordersUrl.json');
+    Map<String, dynamic> data = json.decode(response.body);
+    if (data != null) {
+      data.forEach((orderId, orderData) {
+        loadedItems.add(Order(
+          id: orderId,
+          total: orderData['total'],
+          date: DateTime.parse(orderData['date']),
+          products: (orderData['products'] as List<dynamic>).map((item) {
+            return CartItem(
+              product: Product(
+                title: item['title'],
+                description: item['description'],
+                id: item['id'],
+                isFavorite: item['isFavorite'],
+                imageUrl: item['imageUrl'],
+                price: item['price'],
+              ),
+              total: item['total'],
+              quantity: item['quantity'],
+            );
+          }).toList(),
+        ));
+      });
+      notifyListeners();
+    }
+    _items.clear();
+    _items = loadedItems.reversed.toList();
+    return Future.value();
   }
 
   Future<Error> addOrder(Cart cart) async {

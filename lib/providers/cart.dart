@@ -43,7 +43,7 @@ class Cart with ChangeNotifier {
         return CartItem(
           product: existingItem.product,
           quantity: existingItem.quantity + 1,
-          total: existingItem.total,
+          total: existingItem.total * (existingItem.quantity + 1),
         );
       });
     } else {
