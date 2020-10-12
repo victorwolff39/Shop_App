@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shop_app/exceptions/auth_exception.dart';
 import 'package:shop_app/models/error.dart';
 import 'package:shop_app/providers/auth.dart';
 import 'package:shop_app/utils/form_validator.dart';
@@ -22,7 +23,8 @@ class _AuthCardState extends State<AuthCard> {
     'password': '',
   };
 
-  Future<void> _submit() async {
+  Future<void> _submit(BuildContext context) async {
+    _authData.clear();
     if (!_form.currentState.validate()) {
       return;
     }
@@ -30,18 +32,47 @@ class _AuthCardState extends State<AuthCard> {
       _isLoading = true;
     });
     _form.currentState.save();
-    
-    Auth auth = Provider.of(context, listen: false);
-    Error error;
 
-    if (_authMode == AuthMode.SignIn) {
-      //Login
-    } else {
-      error = await auth.signUp(_authData['email'], _authData['password']);
+    Auth auth = Provider.of(context, listen: false);
+
+    try {
+      if (_authMode == AuthMode.SignIn) {
+        await auth.signIn(
+          _authData['email'],
+          _authData['password'],
+        );
+      } else {
+        await auth.signUp(
+          _authData['email'],
+          _authData['password'],
+        );
+      }
+    } on AuthException catch(error) {
+      _showMessageDialog(error.toString());
+    } catch(error) {
+      _showMessageDialog("An unknown error has occurred.");
     }
     setState(() {
       _isLoading = false;
     });
+  }
+
+  void _showMessageDialog(String msg) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text("Authentication Error"),
+        content: Text(msg),
+        actions: [
+          FlatButton(
+            child: Text('Ok'),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+        ],
+      ),
+    );
   }
 
   void _switchView() {
@@ -56,7 +87,6 @@ class _AuthCardState extends State<AuthCard> {
   @override
   Widget build(BuildContext context) {
     final deviceSize = MediaQuery.of(context).size;
-
     return Card(
       elevation: 8,
       shape: RoundedRectangleBorder(
@@ -86,12 +116,15 @@ class _AuthCardState extends State<AuthCard> {
                 controller: _passwordController,
                 decoration: InputDecoration(labelText: 'Password'),
                 obscureText: true,
-                validator: (value) {
-                  return FormValidator(
-                    content: value,
-                    inputType: InputTypes.Password,
-                  ).validate();
-                },
+                validator: _authMode == AuthMode.SignUp
+                    ? (value) {
+                        //If the user is not creating a account, I don't want to validate his password
+                        return FormValidator(
+                          content: value,
+                          inputType: InputTypes.Password,
+                        ).validate();
+                      }
+                    : null,
                 onSaved: (value) => _authData['password'] = value,
               ),
               if (_authMode == AuthMode.SignUp)
@@ -110,6 +143,7 @@ class _AuthCardState extends State<AuthCard> {
               Spacer(),
               _isLoading
                   ? CircularProgressIndicator()
+
                   : RaisedButton(
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
@@ -122,7 +156,9 @@ class _AuthCardState extends State<AuthCard> {
                       child: Text(
                         _authMode == AuthMode.SignIn ? 'LOGIN' : 'REGISTER',
                       ),
-                      onPressed: _submit,
+                      onPressed: () {
+                        _submit(context);
+                      },
                     ),
               FlatButton(
                 child:

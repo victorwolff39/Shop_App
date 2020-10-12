@@ -12,13 +12,13 @@ class AuthScreen extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
                 colors: [
                   Color.fromRGBO(215, 117, 255, 0.5),
                   Color.fromRGBO(255, 188, 117, 0.9),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+                ]
+              )
             ),
           ),
           Container(
