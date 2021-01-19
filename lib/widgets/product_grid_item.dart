@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shop_app/models/error.dart';
+import 'package:shop_app/providers/auth.dart';
 import 'package:shop_app/providers/cart.dart';
 import 'package:shop_app/providers/product.dart';
 import 'package:shop_app/utils/app_routes.dart';
@@ -22,6 +23,7 @@ class ProductGridItem extends StatelessWidget {
      */
     final Product product = Provider.of<Product>(context, listen: false);
     final Cart cart = Provider.of<Cart>(context, listen: false);
+    final Auth auth = Provider.of(context, listen: false);
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(10),
@@ -56,7 +58,7 @@ class ProductGridItem extends StatelessWidget {
                 ),
               ),
               onPressed: () async {
-                Error error = await product.toggleFavorite();
+                Error error = await product.toggleFavorite(auth.token, auth.userId);
                 if(error != null) {
                   final scaffold = Scaffold.of(context);
                   scaffold.hideCurrentSnackBar();

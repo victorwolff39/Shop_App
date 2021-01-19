@@ -7,8 +7,12 @@ import 'package:shop_app/providers/product.dart';
 
 class ProductsProvider with ChangeNotifier {
   final String _productsUrl = Endpoints.PRODUCTS;
-
+  final String _userFavoritesUrl = Endpoints.USER_FAVORITES;
   List<Product> _items = [];
+  String _token;
+  String _userId;
+
+  ProductsProvider([this._token, this._userId, this._items = const[]]);
 
   List<Product> get items => [..._items];
 
@@ -18,17 +22,22 @@ class ProductsProvider with ChangeNotifier {
 
   Future<void> loadProducts() async {
     _items.clear();
-    final response = await get('$_productsUrl.json');
+    final response = await get('$_productsUrl.json?auth=$_token');
     Map<String, dynamic> data = json.decode(response.body);
+
+    final favoriteResponse = await get('$_userFavoritesUrl/$_userId.json?auth=$_token');
+    final favoritesMap = json.decode(favoriteResponse.body);
+
     if (data != null) {
       data.forEach((productId, productData) {
+        final isFavorite = favoritesMap == null ? false : favoritesMap[productId] ?? false; //If the product is not present in the userFavorites, it will be considered as "false"
         _items.add(Product(
           id: productId,
           title: productData['title'],
           description: productData['description'],
           price: productData['price'],
           imageUrl: productData['imageUrl'],
-          isFavorite: productData['isFavorite'],
+          isFavorite: isFavorite,
         ));
       });
       notifyListeners();
@@ -39,13 +48,12 @@ class ProductsProvider with ChangeNotifier {
   Future<Error> addProduct(Product newProduct) async {
     try {
       final response = await post(
-        '$_productsUrl.json',
+        '$_productsUrl.json?auth=$_token',
         body: json.encode({
           'title': newProduct.title,
           'description': newProduct.description,
           'price': newProduct.price,
           'imageUrl': newProduct.imageUrl,
-          'isFavorite': newProduct.isFavorite,
         }),
       );
 
@@ -74,7 +82,7 @@ class ProductsProvider with ChangeNotifier {
     final index = _items.indexWhere((prod) => prod.id == product.id);
     if (index >= 0) {
       try {
-        await patch('$_productsUrl/${product.id}.json',
+        await patch('$_productsUrl/${product.id}.json?auth=$_token',
             body: json.encode({
               'title': product.title,
               'description': product.description,
@@ -101,7 +109,7 @@ class ProductsProvider with ChangeNotifier {
     if (index >= 0) {
       final product = _items[index];
       try {
-        final response = await delete('$_productsUrl/${product.id}.json');
+        final response = await delete('$_productsUrl/${product.id}.json?auth=$_token');
         _items.remove(product);
         notifyListeners();
         if (response.statusCode >= 400) {

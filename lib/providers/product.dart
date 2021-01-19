@@ -5,7 +5,8 @@ import 'package:shop_app/utils/endpoints.dart';
 import 'package:shop_app/models/error.dart';
 
 class Product with ChangeNotifier {
-  final String _productsUrl = Endpoints.PRODUCTS;
+  //final String _productsUrl = Endpoints.PRODUCTS;
+  final String _userFavoritesUrl = Endpoints.USER_FAVORITES;
   final String id;
   final String title;
   final String description;
@@ -27,11 +28,11 @@ class Product with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<Error> toggleFavorite() async {
+  Future<Error> toggleFavorite(String token, String userId) async {
     _toggleFavorite();
     try {
-      final response = await patch('$_productsUrl/$id.json',
-          body: json.encode({'isFavorite': isFavorite}));
+      final response = await put('$_userFavoritesUrl/$userId/$id.json?auth=$token',
+          body: json.encode(isFavorite));
       if(response.statusCode >= 400) {
         _toggleFavorite();
         return Error(
