@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shop_app/exceptions/auth_exception.dart';
-import 'package:shop_app/models/error.dart';
 import 'package:shop_app/providers/auth.dart';
 import 'package:shop_app/utils/form_validator.dart';
 
@@ -12,12 +11,56 @@ class AuthCard extends StatefulWidget {
   _AuthCardState createState() => _AuthCardState();
 }
 
-class _AuthCardState extends State<AuthCard> {
+class _AuthCardState extends State<AuthCard>
+    with SingleTickerProviderStateMixin {
   GlobalKey<FormState> _form = GlobalKey();
   bool _isLoading = false;
   AuthMode _authMode = AuthMode.SignIn;
 
   final _passwordController = TextEditingController();
+
+  AnimationController _controller;
+  Animation<double> _opacityAnimation;
+  Animation<Offset> _slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _controller = AnimationController(
+      vsync: this,
+      duration: Duration(
+        milliseconds: 300,
+      ),
+    );
+
+    _opacityAnimation = Tween(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.linear,
+      ),
+    );
+
+    _slideAnimation = Tween(
+      begin: Offset(0, -1.5),
+      end: Offset(0, 0.0),
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.linear,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _controller.dispose();
+  }
+
   final Map<String, String> _authData = {
     'email': '',
     'password': '',
@@ -47,9 +90,9 @@ class _AuthCardState extends State<AuthCard> {
           _authData['password'],
         );
       }
-    } on AuthException catch(error) {
+    } on AuthException catch (error) {
       _showMessageDialog(error.toString());
-    } catch(error) {
+    } catch (error) {
       _showMessageDialog("An unknown error has occurred.");
     }
     setState(() {
@@ -78,8 +121,10 @@ class _AuthCardState extends State<AuthCard> {
   void _switchView() {
     if (_authMode == AuthMode.SignIn) {
       _authMode = AuthMode.SignUp;
+      _controller.forward();
     } else {
       _authMode = AuthMode.SignIn;
+      _controller.reverse();
     }
     setState(() {});
   }
@@ -92,7 +137,9 @@ class _AuthCardState extends State<AuthCard> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10),
       ),
-      child: Container(
+      child: AnimatedContainer(
+        duration: Duration(milliseconds: 300),
+        curve: Curves.linear,
         height: _authMode == AuthMode.SignIn ? 290 : 371,
         width: deviceSize.width * 0.75,
         padding: EdgeInsets.all(16),
@@ -127,23 +174,35 @@ class _AuthCardState extends State<AuthCard> {
                     : null,
                 onSaved: (value) => _authData['password'] = value,
               ),
-              if (_authMode == AuthMode.SignUp)
-                TextFormField(
-                  decoration: InputDecoration(labelText: 'Confirm Password'),
-                  obscureText: true,
-                  validator: _authMode == AuthMode.SignUp
-                      ? (value) {
-                          if (value != _passwordController.text) {
-                            return "Passwords don't match.";
-                          }
-                          return null;
-                        }
-                      : null,
+              AnimatedContainer(
+                constraints: BoxConstraints(
+                  minHeight: _authMode == AuthMode.SignUp ? 60 : 0,
+                  maxHeight: _authMode == AuthMode.SignUp ? 120 : 0,
                 ),
+                duration: Duration(milliseconds: 300),
+                curve: Curves.linear,
+                child: FadeTransition(
+                  opacity: _opacityAnimation,
+                  child: SlideTransition(
+                    position: _slideAnimation,
+                    child: TextFormField(
+                      decoration: InputDecoration(labelText: 'Confirm Password'),
+                      obscureText: true,
+                      validator: _authMode == AuthMode.SignUp
+                          ? (value) {
+                              if (value != _passwordController.text) {
+                                return "Passwords don't match.";
+                              }
+                              return null;
+                            }
+                          : null,
+                    ),
+                  ),
+                ),
+              ),
               Spacer(),
               _isLoading
                   ? CircularProgressIndicator()
-
                   : RaisedButton(
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
@@ -165,7 +224,7 @@ class _AuthCardState extends State<AuthCard> {
                     Text(_authMode == AuthMode.SignIn ? "Sign Up" : "Sign In"),
                 textColor: Theme.of(context).primaryColor,
                 onPressed: _isLoading ? null : _switchView,
-              )
+              ),
             ],
           ),
         ),

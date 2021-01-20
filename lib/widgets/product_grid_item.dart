@@ -35,9 +35,13 @@ class ProductGridItem extends StatelessWidget {
                 arguments: product,
               );
             },
-            child: Image.network(
-              product.imageUrl,
-              fit: BoxFit.cover,
+            child: Hero(
+              tag: product.id,
+              child: FadeInImage(
+                placeholder: AssetImage('assets/images/product_placeholder.png'),
+                image: NetworkImage(product.imageUrl),
+                fit: BoxFit.cover,
+              ),
             ),
           ),
           footer: GridTileBar(
@@ -58,8 +62,9 @@ class ProductGridItem extends StatelessWidget {
                 ),
               ),
               onPressed: () async {
-                Error error = await product.toggleFavorite(auth.token, auth.userId);
-                if(error != null) {
+                Error error =
+                    await product.toggleFavorite(auth.token, auth.userId);
+                if (error != null) {
                   final scaffold = Scaffold.of(context);
                   scaffold.hideCurrentSnackBar();
                   scaffold.showSnackBar(SnackBar(
@@ -85,8 +90,9 @@ class ProductGridItem extends StatelessWidget {
                  * go up the hierarchy to find the proper Scaffold (in this case it is on
                  * ProductsOverviewScreen
                  */
-                final scaffold =  Scaffold.of(context);
-                scaffold.hideCurrentSnackBar(); //Remove SnackBar that is currently on the screen.
+                final scaffold = Scaffold.of(context);
+                scaffold
+                    .hideCurrentSnackBar(); //Remove SnackBar that is currently on the screen.
                 scaffold.showSnackBar(
                   SnackBar(
                     content: Text('Product successfully added to the cart.'),
